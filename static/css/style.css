@@ -1,0 +1,558 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fredoka:wght@400;500;600;700&family=Comfortaa:wght@400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quicksand', 'Comfortaa', sans-serif;
+    background: linear-gradient(180deg,
+        #FFA947 0%,
+        #FF6B35 40%,
+        #FF4E50 70%,
+        #8B4F75 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Background overlay with CLEAR image */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 1;
+    z-index: 0;
+}
+
+/* Animated Bees Background */
+.bees-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.bee {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-image: url('../images/bee.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    animation: float-bee 20s infinite ease-in-out;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.bee:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 18s; }
+.bee:nth-child(2) { left: 25%; animation-delay: 4s; animation-duration: 22s; }
+.bee:nth-child(3) { left: 50%; animation-delay: 8s; animation-duration: 20s; }
+.bee:nth-child(4) { left: 70%; animation-delay: 12s; animation-duration: 19s; }
+.bee:nth-child(5) { left: 85%; animation-delay: 16s; animation-duration: 21s; }
+
+
+
+@keyframes float-bee {
+    0% {
+        transform: translateY(110vh) translateX(0) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(50vh) translateX(50px) rotate(15deg) scale(1);
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20vh) translateX(-30px) rotate(-15deg) scale(0.8);
+        opacity: 0;
+    }
+}
+
+
+/* Music player controls */
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 3px solid #FFD700;
+}
+
+.music-toggle {
+    background: linear-gradient(135deg, #FFA947, #FF6B35);
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+}
+
+.music-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.6);
+}
+
+.music-info {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.volume-slider {
+    width: 80px;
+    height: 5px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #FF6B35;
+    cursor: pointer;
+}
+
+/* Container */
+.container {
+    position: relative;
+    z-index: 2;
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+/* Card */
+.card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 30px;
+    padding: 45px 40px;
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.4),
+        0 0 0 2px rgba(255, 200, 100, 0.6) inset,
+        0 10px 30px rgba(255, 165, 0, 0.3);
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 4px solid #FFD700;
+}
+
+/* Typography */
+.title {
+    font-family: 'Fredoka', 'Quicksand', sans-serif;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #FF6B35, #FFA947, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 15px;
+    font-weight: 700;
+    letter-spacing: 0px;
+    position: relative;
+}
+
+.title::before {
+    content: '🌻';
+    position: absolute;
+    left: -45px;
+    font-size: 1.8rem;
+}
+
+.title::after {
+    content: '🌻';
+    position: absolute;
+    right: -45px;
+    font-size: 1.8rem;
+}
+
+.subtitle {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.question {
+    font-family: 'Fredoka', 'Comfortaa', sans-serif;
+    font-size: 2rem;
+    background: linear-gradient(135deg, #FF6B35, #FF4E50);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 30px 0;
+    font-weight: 700;
+    letter-spacing: 0px;
+}
+
+.message-intro {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.1rem;
+    color: #666;
+    margin: 20px 0;
+    font-weight: 600;
+}
+
+/* Forms */
+.form {
+    margin-top: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    font-family: 'Comfortaa', sans-serif;
+    display: block;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.form-group input,
+.form-group textarea {
+    font-family: 'Quicksand', sans-serif;
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 1rem;
+    border: 3px solid #FFD700;
+    border-radius: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #FF6B35;
+    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2);
+    background: white;
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* ... (keep all existing CSS) ... */
+
+/* Update only these button-related sections: */
+
+/* Buttons */
+.btn {
+    font-family: 'Fredoka', 'Comfortaa', sans-serif;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #FFA947, #FF6B35);
+    color: white;
+    box-shadow: 0 6px 18px rgba(255, 107, 53, 0.4);
+    border: 3px solid #FFD700;
+    margin: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(255, 107, 53, 0.6);
+}
+
+.btn-yes {
+    background: linear-gradient(135deg, #FFD700, #FFA947);
+    color: #333;
+    box-shadow: 0 6px 18px rgba(255, 215, 0, 0.5);
+    border: 3px solid #FF6B35;
+    transition: all 0.3s ease;
+    font-weight: 800;
+}
+
+.btn-yes:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.7);
+}
+
+/* NO BUTTON - Starts as relative, becomes fixed after first click */
+.btn-no {
+    background: linear-gradient(135deg, #999, #666);
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border: 3px solid #ccc;
+    transition: all 0.3s ease;
+    /* Starts as relative positioning (side-by-side with Yes) */
+    position: relative;
+}
+
+.btn-no:hover {
+    background: linear-gradient(135deg, #888, #555);
+    transform: scale(1.05);
+}
+
+
+/* Hint Text */
+.hint {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.1rem;
+    color: #FF6B35;
+    margin-top: 20px;
+    min-height: 30px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 1.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.celebration {
+    animation: celebration 1.5s ease-in-out;
+}
+
+@keyframes celebration {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    15% {
+        transform: scale(1.15) rotate(-8deg);
+    }
+    30% {
+        transform: scale(1.1) rotate(8deg);
+    }
+    45% {
+        transform: scale(1.15) rotate(-8deg);
+    }
+    60% {
+        transform: scale(1.1) rotate(8deg);
+    }
+    75% {
+        transform: scale(1.05) rotate(-4deg);
+    }
+}
+
+.shake {
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-12px) rotate(-2deg); }
+    20%, 40%, 60%, 80% { transform: translateX(12px) rotate(2deg); }
+}
+
+/* Success Animation */
+.success-animation {
+    margin-top: 30px;
+    position: relative;
+    height: 100px;
+}
+
+.heart-burst {
+    width: 90px;
+    height: 90px;
+    background-image: url('../images/flower.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin: 0 auto;
+    animation: flowerGrow 2s infinite ease-in-out;
+    position: relative;
+}
+
+@keyframes flowerGrow {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.3) rotate(180deg);
+    }
+}
+
+/* Decorative Elements */
+.flower-decoration {
+    position: fixed;
+    bottom: -50px;
+    width: 100%;
+    height: 200px;
+    background-image: url('../images/flower.png');
+    background-repeat: repeat-x;
+    background-size: 150px;
+    opacity: 0.3;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card {
+        padding: 35px 25px;
+        border-radius: 25px;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .title::before,
+    .title::after {
+        font-size: 1.5rem;
+        left: -35px;
+        right: -35px;
+    }
+
+    .subtitle {
+        font-size: 1.1rem;
+    }
+
+    .question {
+        font-size: 1.6rem;
+    }
+
+    .btn {
+        padding: 13px 30px;
+        font-size: 1.1rem;
+    }
+
+    .bee {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        max-width: 95%;
+    }
+
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .card {
+        padding: 30px 20px;
+    }
+
+    .title::before,
+    .title::after {
+        display: none;
+    }
+}
+
+/* Border animation */
+@keyframes rotate-border {
+    0% {
+        border-color: #FFD700;
+    }
+    25% {
+        border-color: #FFA947;
+    }
+    50% {
+        border-color: #FF6B35;
+    }
+    75% {
+        border-color: #FFA947;
+    }
+    100% {
+        border-color: #FFD700;
+    }
+}
+
+.card {
+    animation: rotate-border 3s infinite;
+}

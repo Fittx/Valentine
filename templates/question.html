@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will you be my Valentine? 🌻</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Button container - side by side layout */
+        .button-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 40px 0;
+            min-height: 80px;
+            position: relative;
+        }
+
+        .yes-btn-wrapper {
+            position: relative;
+            z-index: 100;
+        }
+
+        .no-btn-wrapper {
+            position: relative;
+            z-index: 50;
+        }
+
+        /* Container for moving button */
+        .question-card {
+            position: relative;
+        }
+
+        /* No button becomes absolute positioned AFTER first click */
+        #noBtn.moving {
+            position: absolute !important;
+            z-index: 50;
+        }
+
+
+        /* Music player controls */
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 3px solid #FFD700;
+}
+
+.music-toggle {
+    background: linear-gradient(135deg, #FFA947, #FF6B35);
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+}
+
+.music-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(255, 107, 53, 0.6);
+}
+
+.music-info {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.volume-slider {
+    width: 80px;
+    height: 5px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #FF6B35;
+    cursor: pointer;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="bees-background">
+        <div class="bee"></div>
+        <div class="bee"></div>
+        <div class="bee"></div>
+        <div class="bee"></div>
+        <div class="bee"></div>
+    </div>
+
+    <div class="container fade-in">
+        <div class="card question-card" id="questionCard">
+            <h1 class="title pulse">{{ name }},</h1>
+            <h2 class="question">Will you be my Valentine?</h2>
+
+            <div class="button-wrapper" id="buttonWrapper">
+                <div class="yes-btn-wrapper">
+                    <form action="/accept" method="POST" style="display: inline;">
+                        <button type="submit" id="yesBtn" class="btn btn-yes">
+                            Yes!
+                        </button>
+                    </form>
+                </div>
+                <div class="no-btn-wrapper" id="noWrapper">
+                    <button id="noBtn" class="btn btn-no">
+                        No
+                    </button>
+                </div>
+            </div>
+
+            <p class="hint" id="hint"></p>
+        </div>
+    </div>
+
+    <div class="flower-decoration"></div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let noClickCount = 0;
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const hint = document.getElementById('hint');
+        const card = document.getElementById('questionCard');
+
+        // Different "No" button texts
+        const noButtonTexts = [
+            "No",
+            "Are you sure?",
+            "Really??",
+            "Think again!",
+            "Don't do this!",
+            "Please reconsider 🥺",
+            "You're breaking my heart 💔",
+            "Give me a chance",
+            "Pretty please? 🙏",
+            "I'm begging you",
+            "Just click Yes!",
+            "Why not?? 😢",
+            "Come on...",
+            "Please please please",
+            "One more time... 💛",
+            "I'll be so sad 😭",
+            "Don't leave me",
+            "Say yes! 🌻",
+            "You know you want to",
+            "Last chance! 💔"
+        ];
+
+        const hints = [
+            "Hmm, trying to say no? 🤔",
+            "The Yes button is looking better! 🌻",
+            "I see you're persistent... 👀",
+            "You can't escape! 🐝",
+            "The Yes button is growing! 📈",
+            "Why are you running? 💛",
+            "Almost there... 🎯",
+            "Just give in already! 🌸",
+            "You're making this hard! 💐",
+            "Seriously? Still trying? 😅",
+            "The No button is getting smaller... 🔍",
+            "Just click Yes! It's easier! 🌻",
+            "You're very determined! 💪",
+            "But why though? 🤷‍♂️",
+            "Okay, this is the last straw! 😤"
+        ];
+
+        // Function to move No button INSIDE the card only
+        function moveNoButtonInCard() {
+            // Get card dimensions
+            const cardRect = card.getBoundingClientRect();
+            const buttonWidth = noBtn.offsetWidth;
+            const buttonHeight = noBtn.offsetHeight;
+
+            // Define safe area INSIDE the card (with padding)
+            const padding = 20;
+            const minX = padding;
+            const maxX = cardRect.width - buttonWidth - padding;
+            const minY = 100; // Below the title
+            const maxY = cardRect.height - buttonHeight - 100; // Above hint
+
+            // Generate random position within card
+            const randomX = Math.random() * (maxX - minX) + minX;
+            const randomY = Math.random() * (maxY - minY) + minY;
+
+            // Apply position (relative to card)
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+        }
+
+        // ONLY move on CLICK - removed hover event completely
+        noBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Don't allow clicks after 15 attempts
+            if (noClickCount >= 15) {
+                return;
+            }
+
+            noClickCount++;
+
+            // On FIRST click, change to absolute positioning
+            if (noClickCount === 1) {
+                noBtn.classList.add('moving');
+            }
+
+            // Change button text
+            if (noClickCount < noButtonTexts.length) {
+                noBtn.textContent = noButtonTexts[noClickCount];
+            } else {
+                noBtn.textContent = noButtonTexts[noButtonTexts.length - 1];
+            }
+
+            // Show hint
+            if (noClickCount <= hints.length) {
+                hint.textContent = hints[noClickCount - 1];
+                hint.style.opacity = '1';
+            }
+
+            // Move button ONLY if less than 15 clicks
+            if (noClickCount < 15) {
+                moveNoButtonInCard();
+            }
+
+            // Increase Yes button size gradually
+            const newSize = 1 + (noClickCount * 0.2);
+            const newPadding = 15 + (noClickCount * 4);
+            const newFontSize = 1.2 + (noClickCount * 0.12);
+
+            yesBtn.style.transform = `scale(${newSize})`;
+            yesBtn.style.padding = `${newPadding}px ${newPadding * 2}px`;
+            yesBtn.style.fontSize = `${newFontSize}rem`;
+            yesBtn.style.transition = 'all 0.3s ease';
+
+            // After 5 clicks, start making No button smaller
+            if (noClickCount >= 5) {
+                const shrinkFactor = 1 - ((noClickCount - 5) * 0.05);
+                noBtn.style.fontSize = (1.2 * Math.max(shrinkFactor, 0.6)) + 'rem';
+                noBtn.style.padding = (15 * Math.max(shrinkFactor, 0.6)) + 'px ' + (40 * Math.max(shrinkFactor, 0.6)) + 'px';
+            }
+
+            // After 10 clicks, make No button more transparent
+            if (noClickCount >= 10) {
+                const opacityFactor = 1 - ((noClickCount - 10) * 0.1);
+                noBtn.style.opacity = Math.max(opacityFactor, 0.3);
+                hint.textContent = "The No button is fading away! 💛🌻";
+            }
+
+            // After EXACTLY 15 clicks, make it impossible to click
+            if (noClickCount === 15) {
+                noBtn.style.pointerEvents = 'none';
+                noBtn.style.opacity = '0.2';
+                noBtn.style.display = 'none';
+                hint.textContent = "The No button has given up! You MUST click Yes now! 🎉🌻";
+                hint.style.fontSize = '1.3rem';
+                hint.style.fontWeight = '800';
+
+                // Make Yes button massive
+                yesBtn.style.transform = 'scale(3)';
+                yesBtn.style.zIndex = '10000';
+            }
+        });
+    </script>
+
+
+    <script>
+        // ========== MUSIC PLAYER - CONTINUATION PAGES ==========
+const playlist = [
+    { title: "See You Again", src: "{{ url_for('static', filename='music/1. See.mp3') }}" },
+    { title: "Glitter", src: "{{ url_for('static', filename='music/2. Gli.mp3') }}" },
+    { title: "Sometimes", src: "{{ url_for('static', filename='music/3. Sometimes.mp3') }}" },
+    { title: "Daze", src: "{{ url_for('static', filename='music/4. Daze.mp3') }}" },
+    { title: "Infrunami", src: "{{ url_for('static', filename='music/5. Infr.mp3') }}" },
+    { title: "C u girl", src: "{{ url_for('static', filename='music/6. C u.mp3') }}" },
+    { title: "Boyfriend", src: "{{ url_for('static', filename='music/7. Boy.mp3') }}" },
+    { title: "Perfect Love", src: "{{ url_for('static', filename='music/8. Perfect.mp3') }}" },
+    { title: "Sweet / ITYWTD", src: "{{ url_for('static', filename='music/9. Sweet.mp3') }}" },
+    { title: "Some", src: "{{ url_for('static', filename='music/10. Some.mp3') }}" }
+];
+
+let currentSongIndex = 0;
+let shuffledPlaylist = [];
+let isPlaying = false;
+
+const audio = document.getElementById('bgMusic');
+const musicPlayer = document.getElementById('musicPlayer');
+const musicToggle = document.getElementById('musicToggle');
+const nowPlaying = document.getElementById('nowPlaying');
+const volumeSlider = document.getElementById('volumeSlider');
+
+function shufflePlaylist() {
+    shuffledPlaylist = [...playlist];
+    for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+    }
+}
+
+function loadSong(index) {
+    if (index >= shuffledPlaylist.length) {
+        shufflePlaylist();
+        index = 0;
+    }
+    currentSongIndex = index;
+    const song = shuffledPlaylist[index];
+    audio.src = song.src;
+    nowPlaying.textContent = `♪ ${song.title}`;
+    if (isPlaying) {
+        audio.play().catch(e => console.log('Play prevented:', e));
+    }
+}
+
+function nextSong() {
+    loadSong(currentSongIndex + 1);
+}
+
+function toggleMusic() {
+    if (isPlaying) {
+        audio.pause();
+        musicToggle.textContent = '▶️';
+        isPlaying = false;
+    } else {
+        audio.play().catch(e => console.log('Play prevented:', e));
+        musicToggle.textContent = '⏸️';
+        isPlaying = true;
+    }
+}
+
+// Resume music from previous page
+const savedTime = sessionStorage.getItem('musicTime');
+const savedSong = sessionStorage.getItem('currentSong');
+const savedPlaying = sessionStorage.getItem('isPlaying');
+const savedVolume = sessionStorage.getItem('volume');
+
+if (savedSong !== null) {
+    currentSongIndex = parseInt(savedSong);
+    shuffledPlaylist = JSON.parse(sessionStorage.getItem('shuffledPlaylist') || '[]');
+    if (shuffledPlaylist.length === 0) {
+        shufflePlaylist();
+    }
+    loadSong(currentSongIndex);
+    if (savedTime) audio.currentTime = parseFloat(savedTime);
+    if (savedVolume) volumeSlider.value = savedVolume;
+    audio.volume = volumeSlider.value / 100;
+
+    if (savedPlaying === 'true') {
+        isPlaying = true;
+        audio.play().catch(e => console.log('Play prevented:', e));
+        musicToggle.textContent = '⏸️';
+    }
+    musicPlayer.style.display = 'flex';
+} else {
+    shufflePlaylist();
+    loadSong(0);
+    musicPlayer.style.display = 'flex';
+}
+
+musicToggle.addEventListener('click', toggleMusic);
+volumeSlider.addEventListener('input', function() {
+    audio.volume = this.value / 100;
+});
+audio.addEventListener('ended', nextSong);
+
+window.addEventListener('beforeunload', function() {
+    sessionStorage.setItem('musicTime', audio.currentTime);
+    sessionStorage.setItem('currentSong', currentSongIndex);
+    sessionStorage.setItem('isPlaying', isPlaying);
+    sessionStorage.setItem('volume', volumeSlider.value);
+    sessionStorage.setItem('shuffledPlaylist', JSON.stringify(shuffledPlaylist));
+});
+    </script>
+
+<!-- Music Player -->
+<div class="music-player" id="musicPlayer" style="display: none;">
+    <button class="music-toggle" id="musicToggle">
+        🎵
+    </button>
+    <div class="music-info">
+        <div id="nowPlaying">Playing: Song</div>
+    </div>
+    <div class="volume-control">
+        <span>🔊</span>
+        <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+    </div>
+</div>
+
+<!-- Audio Element -->
+<audio id="bgMusic" preload="auto"></audio>
+
+</body>
+</html>
