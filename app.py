@@ -16,28 +16,37 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 app.secret_key = Config.SECRET_KEY
 
-# Session configuration for production
-
-# Session configuration for production
+# Session configuration for production (cookie-based, compatible with Render's ephemeral filesystem)
 app.config.update(
     SESSION_COOKIE_SECURE=True,  # Render uses HTTPS
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=1800,  # 30 minutes
-    # Removed SESSION_TYPE - Flask will use signed cookies by default
 )
 
 def get_db_connection():
-    """Get PostgreSQL database connection"""
+    """Get PostgreSQL database connection
+    
+    Prefers DATABASE_URL (Render's auto-generated connection string) when available,
+    falls back to individual connection parameters for local development.
+    """
     try:
-        connection = psycopg2.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME,
-            cursor_factory=RealDictCursor
-        )
+        # Use DATABASE_URL if available (Render deployment)
+        if Config.DATABASE_URL:
+            connection = psycopg2.connect(
+                Config.DATABASE_URL,
+                cursor_factory=RealDictCursor
+            )
+        else:
+            # Fallback to individual parameters (local development)
+            connection = psycopg2.connect(
+                host=Config.DB_HOST,
+                port=Config.DB_PORT,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME,
+                cursor_factory=RealDictCursor
+            )
         connection.autocommit = False
         return connection
     except psycopg2.Error as e:
@@ -106,6 +115,22 @@ def init_db():
         return True
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
+        return False
+
+def verify_project_structure():
+    """Verify that required project files and directories exist"""
+    try:
+        required_dirs = ['templates', 'static']
+        missing_dirs = [d for d in required_dirs if not os.path.exists(os.path.join(BASE_DIR, d))]
+        
+        if missing_dirs:
+            print(f"❌ Missing required directories: {', '.join(missing_dirs)}")
+            return False
+        
+        print("✅ Project structure verified!")
+        return True
+    except Exception as e:
+        print(f"❌ Error verifying project structure: {e}")
         return False
 
 def test_db_connection():
