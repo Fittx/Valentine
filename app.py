@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import pymysql
+import sqlite3
 from datetime import datetime
 from config import Config
 import os
@@ -15,23 +15,52 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 app.secret_key = Config.SECRET_KEY
 
+# Session configuration for production (PythonAnywhere)
+app.config.update(
+    SESSION_COOKIE_SECURE=False,  # Set to True if using HTTPS
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=1800  # 30 minutes
+)
+
 def get_db_connection():
-    """Get MySQL database connection"""
+    """Get SQLite database connection"""
     try:
-        connection = pymysql.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME,
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=False
-        )
+        connection = sqlite3.connect(Config.DB_PATH)
+        connection.row_factory = sqlite3.Row
         return connection
-    except pymysql.MySQLError as e:
-        print(f"Error connecting to MySQL: {e}")
+    except sqlite3.Error as e:
+        print(f"Error connecting to SQLite: {e}")
         raise
+
+def init_db():
+    """Initialize the database with tables"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Create users table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Create messages table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            message TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+    print("✅ Database initialized!")
 
 def test_db_connection():
     """Test database connection on startup"""
@@ -47,9 +76,8 @@ def test_db_connection():
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         print("\nPlease ensure:")
-        print("1. MySQL is running")
-        print("2. You've run the database_setup.sql script in SQL Workbench")
-        print("3. Database credentials in config.py are correct")
+        print("1. SQLite database path is accessible")
+        print("2. You have write permissions in the project directory")
         return False
 
 def verify_project_structure():
@@ -122,7 +150,7 @@ def submit_name():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute('INSERT INTO users (name) VALUES (%s)', (name,))
+        cursor.execute('INSERT INTO users (name) VALUES (?)', (name,))
         user_id = cursor.lastrowid
 
         conn.commit()
@@ -177,7 +205,7 @@ def submit_message():
             cursor = conn.cursor()
 
             cursor.execute(
-                'INSERT INTO messages (user_id, message) VALUES (%s, %s)',
+                'INSERT INTO messages (user_id, message) VALUES (?, ?)',
                 (session['user_id'], user_message)
             )
 
@@ -328,6 +356,9 @@ if __name__ == '__main__':
     print("=" * 60)
     print("🚀 Starting Valentine's Day Website...")
     print("=" * 60)
+
+    # Initialize database
+    init_db()
 
     # Verify project structure
     if not verify_project_structure():
