@@ -30,14 +30,26 @@ app.config.update(
 def get_db_connection():
     """Get PostgreSQL database connection"""
     try:
-        connection = psycopg2.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME,
-            cursor_factory=RealDictCursor
-        )
+        # Use DATABASE_URL if available (Render provides this)
+        database_url = Config.DATABASE_URL
+        
+        if database_url:
+            # Connect using the full connection URL
+            connection = psycopg2.connect(
+                database_url,
+                cursor_factory=RealDictCursor
+            )
+        else:
+            # Fallback to individual parameters for local development
+            connection = psycopg2.connect(
+                host=Config.DB_HOST,
+                port=Config.DB_PORT,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME,
+                cursor_factory=RealDictCursor
+            )
+        
         connection.autocommit = False
         return connection
     except psycopg2.Error as e:
@@ -125,6 +137,22 @@ def test_db_connection():
         print("1. PostgreSQL is running")
         print("2. Database credentials are correct")
         print("3. Database exists")
+        return False
+
+
+def verify_project_structure():
+    """Verify that all required directories exist"""
+    try:
+        if not os.path.exists(TEMPLATE_DIR):
+            print(f"❌ Template directory not found: {TEMPLATE_DIR}")
+            return False
+        if not os.path.exists(STATIC_DIR):
+            print(f"❌ Static directory not found: {STATIC_DIR}")
+            return False
+        print("✅ Project structure verified!")
+        return True
+    except Exception as e:
+        print(f"❌ Error verifying project structure: {e}")
         return False
 
 
