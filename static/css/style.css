@@ -581,3 +581,97 @@ body::before {
 .card {
     animation: rotate-border 3s infinite;
 }
+
+/* ===== Mobile improvements ===== */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 0;
+    }
+
+    .container {
+        width: 100%;
+        padding: 0 14px;
+    }
+
+    .card {
+        width: 100%;
+        padding: 28px 20px;
+        border-radius: 20px;
+    }
+
+    .title {
+        font-size: 1.9rem;
+    }
+
+    .subtitle,
+    .question,
+    .message-intro {
+        font-size: 1rem;
+        line-height: 1.4;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        font-size: 1rem;
+        padding: 12px 14px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 1rem;
+    }
+
+    .button-wrapper {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .music-player {
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        bottom: 10px;
+        width: calc(100% - 30px);
+        padding: 10px 12px;
+        border-radius: 16px;
+    }
+
+    .music-info {
+        font-size: 0.8rem;
+    }
+
+    .volume-slider {
+        width: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .subtitle,
+    .question {
+        font-size: 0.95rem;
+    }
+
+    .btn {
+        font-size: 0.95rem;
+        padding: 12px 16px;
+    }
+
+    .music-player {
+        gap: 8px;
+    }
+}
+
+/* Disable hover-only effects on touch devices */
+@media (hover: none) {
+    .btn:hover,
+    .music-toggle:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
