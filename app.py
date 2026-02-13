@@ -15,8 +15,7 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 app.secret_key = Config.SECRET_KEY
 
-# Initialize database tables on startup (needed for gunicorn/Render)
-init_db()
+
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -132,6 +131,8 @@ def test_db_connection():
         print("3. Database exists")
         return False
 
+# Initialize database tables on startup (needed for gunicorn/Render)
+init_db()
 
 
 
