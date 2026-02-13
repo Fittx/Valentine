@@ -17,7 +17,7 @@ app.secret_key = Config.SECRET_KEY
 
 # Session configuration for production (PythonAnywhere)
 app.config.update(
-    SESSION_COOKIE_SECURE=False,  # Set to True if using HTTPS
+    SESSION_COOKIE_SECURE=os.environ.get('FLASK_ENV') == 'production',  # True if HTTPS is used in production
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=1800  # 30 minutes
