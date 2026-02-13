@@ -10,20 +10,22 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
-# Initialize Flask with explicit paths
 app = Flask(__name__,
             template_folder=TEMPLATE_DIR,
             static_folder=STATIC_DIR)
 app.secret_key = Config.SECRET_KEY
 
-# Session configuration for production
+# Initialize database tables on startup (needed for gunicorn/Render)
+init_db()
+
 app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Render uses HTTPS
+    SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    PERMANENT_SESSION_LIFETIME=1800,  # 30 minutes
-    # Removed SESSION_TYPE - Flask will use signed cookies by default
+    PERMANENT_SESSION_LIFETIME=1800,
 )
+
+
 def get_db_connection():
     """Get PostgreSQL database connection"""
     try:
