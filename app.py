@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import pymysql
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from config import Config
 import os
@@ -15,23 +16,95 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 app.secret_key = Config.SECRET_KEY
 
+# Session configuration for production
+app.config.update(
+    SESSION_COOKIE_SECURE=True,  # Set to False for HTTP, True for HTTPS
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=1800,  # 30 minutes
+    SESSION_TYPE='filesystem'
+)
+
 def get_db_connection():
-    """Get MySQL database connection"""
+    """Get PostgreSQL database connection"""
     try:
-        connection = pymysql.connect(
+        connection = psycopg2.connect(
             host=Config.DB_HOST,
             port=Config.DB_PORT,
             user=Config.DB_USER,
             password=Config.DB_PASSWORD,
             database=Config.DB_NAME,
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=False
+            cursor_factory=RealDictCursor
         )
+        connection.autocommit = False
         return connection
-    except pymysql.MySQLError as e:
-        print(f"Error connecting to MySQL: {e}")
+    except psycopg2.Error as e:
+        print(f"Error connecting to PostgreSQL: {e}")
         raise
+
+
+def init_db():
+    """Initialize the database with tables"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Create users table
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS users
+                       (
+                           id
+                           SERIAL
+                           PRIMARY
+                           KEY,
+                           name
+                           VARCHAR
+                       (
+                           255
+                       ) NOT NULL,
+                           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                           )
+                       ''')
+
+        # Create messages table
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS messages
+                       (
+                           id
+                           SERIAL
+                           PRIMARY
+                           KEY,
+                           user_id
+                           INTEGER
+                           NOT
+                           NULL,
+                           message
+                           TEXT
+                           NOT
+                           NULL,
+                           timestamp
+                           TIMESTAMP
+                           DEFAULT
+                           CURRENT_TIMESTAMP,
+                           FOREIGN
+                           KEY
+                       (
+                           user_id
+                       ) REFERENCES users
+                       (
+                           id
+                       )
+                           )
+                       ''')
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("✅ Database tables initialized!")
+        return True
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        return False
 
 def test_db_connection():
     """Test database connection on startup"""
@@ -47,62 +120,13 @@ def test_db_connection():
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         print("\nPlease ensure:")
-        print("1. MySQL is running")
-        print("2. You've run the database_setup.sql script in SQL Workbench")
-        print("3. Database credentials in config.py are correct")
+        print("1. PostgreSQL is running")
+        print("2. Database credentials are correct")
+        print("3. Database exists")
         return False
 
-def verify_project_structure():
-    """Verify that all required directories exist"""
-    print(f"\n📁 Project Directory: {BASE_DIR}")
-    print(f"📁 Templates Directory: {TEMPLATE_DIR}")
-    print(f"📁 Static Directory: {STATIC_DIR}")
 
-    if not os.path.exists(TEMPLATE_DIR):
-        print(f"❌ Templates folder not found at: {TEMPLATE_DIR}")
-        print("   Please create the 'templates' folder")
-        return False
 
-    if not os.path.exists(STATIC_DIR):
-        print(f"❌ Static folder not found at: {STATIC_DIR}")
-        print("   Please create the 'static' folder")
-        return False
-
-    # Check for required template files
-    required_templates = ['landing.html', 'question.html', 'message.html', 'thank_you.html']
-    missing_templates = []
-
-    for template in required_templates:
-        template_path = os.path.join(TEMPLATE_DIR, template)
-        if os.path.exists(template_path):
-            print(f"✅ Found: templates/{template}")
-        else:
-            print(f"❌ Missing: templates/{template}")
-            missing_templates.append(template)
-
-    # Check for static folders
-    css_dir = os.path.join(STATIC_DIR, 'css')
-    js_dir = os.path.join(STATIC_DIR, 'js')
-
-    if os.path.exists(css_dir):
-        print(f"✅ Found: static/css/")
-    else:
-        print(f"❌ Missing: static/css/")
-        os.makedirs(css_dir, exist_ok=True)
-        print(f"✅ Created: static/css/")
-
-    if os.path.exists(js_dir):
-        print(f"✅ Found: static/js/")
-    else:
-        print(f"❌ Missing: static/js/")
-        os.makedirs(js_dir, exist_ok=True)
-        print(f"✅ Created: static/js/")
-
-    if missing_templates:
-        print(f"\n⚠️  Missing templates: {', '.join(missing_templates)}")
-        return False
-
-    return True
 
 @app.route('/')
 def landing():
@@ -122,8 +146,8 @@ def submit_name():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute('INSERT INTO users (name) VALUES (%s)', (name,))
-        user_id = cursor.lastrowid
+        cursor.execute('INSERT INTO users (name) VALUES (%s) RETURNING id', (name,))
+        user_id = cursor.fetchone()['id']
 
         conn.commit()
         cursor.close()
@@ -324,15 +348,19 @@ def view_data():
         <p>Make sure your database is set up correctly.</p>
         '''
 
+
 if __name__ == '__main__':
     print("=" * 60)
     print("🚀 Starting Valentine's Day Website...")
     print("=" * 60)
 
+    # Initialize database
+    init_db()
+
     # Verify project structure
     if not verify_project_structure():
         print("\n⚠️  Please fix the project structure issues above.")
-        input("\nPress Enter to exit...")
+        # Removed input() for production
         exit(1)
 
     print("\n" + "=" * 60)
@@ -340,12 +368,13 @@ if __name__ == '__main__':
     # Test database connection
     if test_db_connection():
         print("=" * 60)
-        print("✨ Server starting on http://localhost:5000")
+        print("✨ Server starting...")
         print("=" * 60)
-        print("\n💡 Access the website at: http://localhost:5000")
-        print("💡 View admin panel at: http://localhost:5000/admin/view-data")
-        print("\n⚠️  Press CTRL+C to stop the server\n")
-        app.run(debug=True, host='127.0.0.1', port=5000)
+
+        # Use environment variable PORT for Render
+        port = int(os.environ.get('PORT', 5000))
+        app.run(debug=False, host='0.0.0.0', port=port)
     else:
         print("\n⚠️  Please fix database connection issues before starting the server.")
-        input("\nPress Enter to exit...")
+        # Removed input() for production
+        exit(1)

@@ -2,20 +2,18 @@ import os
 
 
 class Config:
-    """Database configuration"""
+    """Database configuration for PostgreSQL"""
 
-    # MySQL Database Configuration
-    # Update these with your SQL Workbench connection details
-    DB_HOST = 'localhost'
-    DB_PORT = 3306
-    DB_USER = 'root'  # Change to your MySQL username
-    DB_PASSWORD = '1234'  # Change to your MySQL password
-    DB_NAME = 'valentine_db'
+    # PostgreSQL configuration (for Render.com)
+    # These will be automatically set by Render from the database service
+    DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+    # Individual connection parameters (fallback)
+    DB_HOST = os.environ.get('PGHOST', 'localhost')
+    DB_PORT = int(os.environ.get('PGPORT', 5432))
+    DB_USER = os.environ.get('PGUSER', 'postgres')
+    DB_PASSWORD = os.environ.get('PGPASSWORD', '')
+    DB_NAME = os.environ.get('PGDATABASE', 'valentine_db')
 
     # Flask secret key
-    SECRET_KEY = 'your-secret-key-here-change-in-production'
-
-    # MySQL connection string
-    @staticmethod
-    def get_db_uri():
-        return f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASSWORD}@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}"
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'change-this-in-production-please')
