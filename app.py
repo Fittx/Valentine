@@ -32,6 +32,7 @@ def get_db_connection():
     """
     try:
         # Use DATABASE_URL if available (Render deployment)
+        # Check both existence and non-whitespace to handle edge cases
         if Config.DATABASE_URL and Config.DATABASE_URL.strip():
             connection = psycopg2.connect(
                 Config.DATABASE_URL,
