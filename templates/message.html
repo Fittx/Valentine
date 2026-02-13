@@ -6,71 +6,7 @@
     <title>Leave a Message 🌻</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        /* Music player controls */
-        .music-player {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 3px solid #FFD700;
-        }
-
-        .music-toggle {
-            background: linear-gradient(135deg, #FFA947, #FF6B35);
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
-        }
-
-        .music-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.6);
-        }
-
-        .music-info {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 0.9rem;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .volume-slider {
-            width: 80px;
-            height: 5px;
-            border-radius: 5px;
-            background: #ddd;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: #FF6B35;
-            cursor: pointer;
-        }
+        /* Music player styles now live in static/css/style.css */
     </style>
 </head>
 <body>
@@ -86,14 +22,14 @@
         <div class="card">
             <h1 class="title celebration">Yay!</h1>
             <p class="subtitle">I knew you'd say yes, {{ name }}! 🌻</p>
-            <p class="message-intro">Now, leave me a sweet message:</p>
+            <p class="message-intro">just say the word and I'll be with you!!</p>
 
             <form action="/submit-message" method="POST" class="form">
                 <div class="form-group">
                     <textarea
                         id="message"
                         name="message"
-                        placeholder="Write your message here... 💌"
+                        placeholder="Write your message here..."
                         rows="6"
                         required
                     ></textarea>
@@ -109,12 +45,14 @@
 
     <!-- Music Player - Always visible -->
     <div class="music-player" id="musicPlayer">
-        <button class="music-toggle" id="musicToggle">▶️</button>
+        <button class="music-toggle" id="musicToggle">
+            <img id="musicIcon" src="{{ url_for('static', filename='icons/play.png') }}" alt="Play">
+        </button>
         <div class="music-info">
             <div id="nowPlaying">Click to play music</div>
         </div>
         <div class="volume-control">
-            <span>🔊</span>
+            <img id="volumeIcon" class="volume-icon" src="{{ url_for('static', filename='icons/volume_up.png') }}" alt="Volume">
             <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
         </div>
     </div>
@@ -139,14 +77,31 @@
             { title: "Some", src: "{{ url_for('static', filename='music/10. Some.mp3') }}" }
         ];
 
+        const iconPlay = "{{ url_for('static', filename='icons/play.png') }}";
+        const iconPause = "{{ url_for('static', filename='icons/pause.png') }}";
+        const iconVolUp = "{{ url_for('static', filename='icons/volume_up.png') }}";
+        const iconVolOff = "{{ url_for('static', filename='icons/volume_off.png') }}";
+
         let currentSongIndex = 0;
         let shuffledPlaylist = [...playlist];
         let isPlaying = false;
 
         const audio = document.getElementById('bgMusic');
         const musicToggle = document.getElementById('musicToggle');
+        const musicIcon = document.getElementById('musicIcon');
         const nowPlaying = document.getElementById('nowPlaying');
         const volumeSlider = document.getElementById('volumeSlider');
+        const volumeIcon = document.getElementById('volumeIcon');
+
+        const setToggleIcon = (playing) => {
+            musicIcon.src = playing ? iconPause : iconPlay;
+            musicIcon.alt = playing ? 'Pause' : 'Play';
+        };
+
+        const setVolumeIcon = (vol) => {
+            volumeIcon.src = vol <= 0.001 ? iconVolOff : iconVolUp;
+            volumeIcon.alt = vol <= 0.001 ? 'Muted' : 'Volume';
+        };
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -167,41 +122,68 @@
             shuffledPlaylist = JSON.parse(savedPlaylist);
             currentSongIndex = parseInt(savedSong);
             audio.src = shuffledPlaylist[currentSongIndex].src;
-            nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+            nowPlaying.textContent = shuffledPlaylist[currentSongIndex].title;
             if (savedTime) audio.currentTime = parseFloat(savedTime);
             if (savedVolume) {
                 volumeSlider.value = savedVolume;
                 audio.volume = savedVolume / 100;
+                setVolumeIcon(audio.volume);
+            } else {
+                setVolumeIcon(audio.volume);
             }
             if (savedPlaying === 'true') {
                 audio.play().then(() => {
-                    musicToggle.textContent = '⏸️';
                     isPlaying = true;
+                    setToggleIcon(true);
                 }).catch(e => console.log('Autoplay prevented'));
+            } else {
+                setToggleIcon(false);
             }
         } else {
             shuffledPlaylist = shuffleArray([...playlist]);
             audio.src = shuffledPlaylist[0].src;
-            nowPlaying.textContent = "▶️ " + shuffledPlaylist[0].title;
+            nowPlaying.textContent = shuffledPlaylist[0].title;
             audio.volume = 0.7;
+            setToggleIcon(false);
+            setVolumeIcon(audio.volume);
         }
+
+        // Arm first-interaction autoplay (click or keypress)
+        let autoPlayArmed = false;
+        function armAutoPlay() {
+            if (autoPlayArmed) return;
+            autoPlayArmed = true;
+            const kickOff = () => {
+                audio.play().then(() => {
+                    isPlaying = true;
+                    nowPlaying.textContent = shuffledPlaylist[currentSongIndex].title;
+                    setToggleIcon(true);
+                }).catch(() => {});
+                document.removeEventListener('pointerdown', kickOff);
+                document.removeEventListener('keydown', kickOff);
+            };
+            document.addEventListener('pointerdown', kickOff);
+            document.addEventListener('keydown', kickOff);
+        }
+        armAutoPlay();
 
         musicToggle.addEventListener('click', function() {
             if (isPlaying) {
                 audio.pause();
-                musicToggle.textContent = '▶️';
                 isPlaying = false;
+                setToggleIcon(false);
             } else {
                 audio.play().then(() => {
-                    musicToggle.textContent = '⏸️';
                     isPlaying = true;
-                    nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+                    nowPlaying.textContent = shuffledPlaylist[currentSongIndex].title;
+                    setToggleIcon(true);
                 }).catch(e => console.log('Play error:', e));
             }
         });
 
         volumeSlider.addEventListener('input', function() {
             audio.volume = this.value / 100;
+            setVolumeIcon(audio.volume);
         });
 
         audio.addEventListener('ended', function() {
@@ -211,8 +193,10 @@
                 currentSongIndex = 0;
             }
             audio.src = shuffledPlaylist[currentSongIndex].src;
-            nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+            nowPlaying.textContent = shuffledPlaylist[currentSongIndex].title;
             audio.play();
+            isPlaying = true;
+            setToggleIcon(true);
         });
 
         window.addEventListener('beforeunload', function() {
@@ -225,4 +209,4 @@
     </script>
 
 </body>
-</html></html>
+</html>

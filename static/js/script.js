@@ -93,20 +93,6 @@ function createSparkle(x, y) {
 }
 
 
-const playlist = [
-    { title: "See You Again", src: "/static/music/1. See.mp3" },
-    { title: "Glitter", src: "/static/music/2. Gli.mp3" },
-    { title: "Sometimes", src: "/static/music/3. Sometimes.mp3" },
-    { title: "Daze", src: "/static/music/4. Daze.mp3" },
-    { title: "Infrunami", src: "/static/music/5. Infr.mp3" },
-    { title: "C u girl", src: "/static/music/6. C u.mp3" },
-    { title: "Boyfriend", src: "/static/music/7. Boy.mp3" },
-    { title: "Perfect Love", src: "/static/music/8. Perfect.mp3" },
-    { title: "Sweet / ITYWTD", src: "/static/music/9. Sweet.mp3" },
-    { title: "Some", src: "/static/music/10. Some.mp3" }
-];
-
-
 // Add sparkle animation CSS dynamically
 const style = document.createElement('style');
 style.textContent = `
