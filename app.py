@@ -17,8 +17,6 @@ app = Flask(__name__,
 app.secret_key = Config.SECRET_KEY
 
 # Session configuration for production
-
-# Session configuration for production
 app.config.update(
     SESSION_COOKIE_SECURE=True,  # Render uses HTTPS
     SESSION_COOKIE_HTTPONLY=True,
@@ -26,18 +24,23 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=1800,  # 30 minutes
     # Removed SESSION_TYPE - Flask will use signed cookies by default
 )
-
 def get_db_connection():
     """Get PostgreSQL database connection"""
     try:
-        connection = psycopg2.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME,
-            cursor_factory=RealDictCursor
-        )
+        if Config.DATABASE_URL:
+            connection = psycopg2.connect(
+                Config.DATABASE_URL,
+                cursor_factory=RealDictCursor
+            )
+        else:
+            connection = psycopg2.connect(
+                host=Config.DB_HOST,
+                port=Config.DB_PORT,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME,
+                cursor_factory=RealDictCursor
+            )
         connection.autocommit = False
         return connection
     except psycopg2.Error as e:
