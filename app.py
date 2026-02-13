@@ -32,7 +32,7 @@ def get_db_connection():
     """
     try:
         # Use DATABASE_URL if available (Render deployment)
-        if Config.DATABASE_URL:
+        if Config.DATABASE_URL and Config.DATABASE_URL.strip():
             connection = psycopg2.connect(
                 Config.DATABASE_URL,
                 cursor_factory=RealDictCursor
@@ -121,7 +121,12 @@ def verify_project_structure():
     """Verify that required project files and directories exist"""
     try:
         required_dirs = ['templates', 'static']
-        missing_dirs = [d for d in required_dirs if not os.path.exists(os.path.join(BASE_DIR, d))]
+        missing_dirs = []
+        
+        for directory in required_dirs:
+            dir_path = os.path.join(BASE_DIR, directory)
+            if not os.path.exists(dir_path):
+                missing_dirs.append(directory)
         
         if missing_dirs:
             print(f"❌ Missing required directories: {', '.join(missing_dirs)}")
