@@ -17,12 +17,14 @@ app = Flask(__name__,
 app.secret_key = Config.SECRET_KEY
 
 # Session configuration for production
+
+# Session configuration for production
 app.config.update(
-    SESSION_COOKIE_SECURE=True,  # Set to False for HTTP, True for HTTPS
+    SESSION_COOKIE_SECURE=True,  # Render uses HTTPS
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=1800,  # 30 minutes
-    SESSION_TYPE='filesystem'
+    # Removed SESSION_TYPE - Flask will use signed cookies by default
 )
 
 def get_db_connection():
