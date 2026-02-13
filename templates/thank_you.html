@@ -96,131 +96,124 @@
     </div>
 
     <div class="flower-decoration"></div>
+
+    <!-- Music Player - Always visible -->
+    <div class="music-player" id="musicPlayer">
+        <button class="music-toggle" id="musicToggle">▶️</button>
+        <div class="music-info">
+            <div id="nowPlaying">Click to play music</div>
+        </div>
+        <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+        </div>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="bgMusic" preload="auto"></audio>
+
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     <script>
-        // ========== MUSIC PLAYER - CONTINUATION PAGES ==========
-const playlist = [
-    { title: "See You Again", src: "{{ url_for('static', filename='music/1. See.mp3') }}" },
-    { title: "Glitter", src: "{{ url_for('static', filename='music/2. Gli.mp3') }}" },
-    { title: "Sometimes", src: "{{ url_for('static', filename='music/3. Sometimes.mp3') }}" },
-    { title: "Daze", src: "{{ url_for('static', filename='music/4. Daze.mp3') }}" },
-    { title: "Infrunami", src: "{{ url_for('static', filename='music/5. Infr.mp3') }}" },
-    { title: "C u girl", src: "{{ url_for('static', filename='music/6. C u.mp3') }}" },
-    { title: "Boyfriend", src: "{{ url_for('static', filename='music/7. Boy.mp3') }}" },
-    { title: "Perfect Love", src: "{{ url_for('static', filename='music/8. Perfect.mp3') }}" },
-    { title: "Sweet / ITYWTD", src: "{{ url_for('static', filename='music/9. Sweet.mp3') }}" },
-    { title: "Some", src: "{{ url_for('static', filename='music/10. Some.mp3') }}" }
-];
+        // ========== MUSIC PLAYER ==========
+        const playlist = [
+            { title: "See You Again", src: "{{ url_for('static', filename='music/1. See.mp3') }}" },
+            { title: "Glitter", src: "{{ url_for('static', filename='music/2. Gli.mp3') }}" },
+            { title: "Sometimes", src: "{{ url_for('static', filename='music/3. Sometimes.mp3') }}" },
+            { title: "Daze", src: "{{ url_for('static', filename='music/4. Daze.mp3') }}" },
+            { title: "Infrunami", src: "{{ url_for('static', filename='music/5. Infr.mp3') }}" },
+            { title: "C u girl", src: "{{ url_for('static', filename='music/6. C u.mp3') }}" },
+            { title: "Boyfriend", src: "{{ url_for('static', filename='music/7. Boy.mp3') }}" },
+            { title: "Perfect Love", src: "{{ url_for('static', filename='music/8. Perfect.mp3') }}" },
+            { title: "Sweet / ITYWTD", src: "{{ url_for('static', filename='music/9. Sweet.mp3') }}" },
+            { title: "Some", src: "{{ url_for('static', filename='music/10. Some.mp3') }}" }
+        ];
 
-let currentSongIndex = 0;
-let shuffledPlaylist = [];
-let isPlaying = false;
+        let currentSongIndex = 0;
+        let shuffledPlaylist = [...playlist];
+        let isPlaying = false;
 
-const audio = document.getElementById('bgMusic');
-const musicPlayer = document.getElementById('musicPlayer');
-const musicToggle = document.getElementById('musicToggle');
-const nowPlaying = document.getElementById('nowPlaying');
-const volumeSlider = document.getElementById('volumeSlider');
+        const audio = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        const nowPlaying = document.getElementById('nowPlaying');
+        const volumeSlider = document.getElementById('volumeSlider');
 
-function shufflePlaylist() {
-    shuffledPlaylist = [...playlist];
-    for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
-    }
-}
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
-function loadSong(index) {
-    if (index >= shuffledPlaylist.length) {
-        shufflePlaylist();
-        index = 0;
-    }
-    currentSongIndex = index;
-    const song = shuffledPlaylist[index];
-    audio.src = song.src;
-    nowPlaying.textContent = `♪ ${song.title}`;
-    if (isPlaying) {
-        audio.play().catch(e => console.log('Play prevented:', e));
-    }
-}
+        // Try to resume from previous page
+        const savedPlaylist = sessionStorage.getItem('shuffledPlaylist');
+        const savedSong = sessionStorage.getItem('currentSong');
+        const savedTime = sessionStorage.getItem('musicTime');
+        const savedPlaying = sessionStorage.getItem('isPlaying');
+        const savedVolume = sessionStorage.getItem('volume');
 
-function nextSong() {
-    loadSong(currentSongIndex + 1);
-}
+        if (savedPlaylist && savedSong !== null) {
+            shuffledPlaylist = JSON.parse(savedPlaylist);
+            currentSongIndex = parseInt(savedSong);
+            audio.src = shuffledPlaylist[currentSongIndex].src;
+            nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+            if (savedTime) audio.currentTime = parseFloat(savedTime);
+            if (savedVolume) {
+                volumeSlider.value = savedVolume;
+                audio.volume = savedVolume / 100;
+            }
+            if (savedPlaying === 'true') {
+                audio.play().then(() => {
+                    musicToggle.textContent = '⏸️';
+                    isPlaying = true;
+                }).catch(e => console.log('Autoplay prevented'));
+            }
+        } else {
+            shuffledPlaylist = shuffleArray([...playlist]);
+            audio.src = shuffledPlaylist[0].src;
+            nowPlaying.textContent = "▶️ " + shuffledPlaylist[0].title;
+            audio.volume = 0.7;
+        }
 
-function toggleMusic() {
-    if (isPlaying) {
-        audio.pause();
-        musicToggle.textContent = '▶️';
-        isPlaying = false;
-    } else {
-        audio.play().catch(e => console.log('Play prevented:', e));
-        musicToggle.textContent = '⏸️';
-        isPlaying = true;
-    }
-}
+        musicToggle.addEventListener('click', function() {
+            if (isPlaying) {
+                audio.pause();
+                musicToggle.textContent = '▶️';
+                isPlaying = false;
+            } else {
+                audio.play().then(() => {
+                    musicToggle.textContent = '⏸️';
+                    isPlaying = true;
+                    nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+                }).catch(e => console.log('Play error:', e));
+            }
+        });
 
-// Resume music from previous page
-const savedTime = sessionStorage.getItem('musicTime');
-const savedSong = sessionStorage.getItem('currentSong');
-const savedPlaying = sessionStorage.getItem('isPlaying');
-const savedVolume = sessionStorage.getItem('volume');
+        volumeSlider.addEventListener('input', function() {
+            audio.volume = this.value / 100;
+        });
 
-if (savedSong !== null) {
-    currentSongIndex = parseInt(savedSong);
-    shuffledPlaylist = JSON.parse(sessionStorage.getItem('shuffledPlaylist') || '[]');
-    if (shuffledPlaylist.length === 0) {
-        shufflePlaylist();
-    }
-    loadSong(currentSongIndex);
-    if (savedTime) audio.currentTime = parseFloat(savedTime);
-    if (savedVolume) volumeSlider.value = savedVolume;
-    audio.volume = volumeSlider.value / 100;
+        audio.addEventListener('ended', function() {
+            currentSongIndex++;
+            if (currentSongIndex >= shuffledPlaylist.length) {
+                shuffledPlaylist = shuffleArray([...playlist]);
+                currentSongIndex = 0;
+            }
+            audio.src = shuffledPlaylist[currentSongIndex].src;
+            nowPlaying.textContent = "♪ " + shuffledPlaylist[currentSongIndex].title;
+            audio.play();
+        });
 
-    if (savedPlaying === 'true') {
-        isPlaying = true;
-        audio.play().catch(e => console.log('Play prevented:', e));
-        musicToggle.textContent = '⏸️';
-    }
-    musicPlayer.style.display = 'flex';
-} else {
-    shufflePlaylist();
-    loadSong(0);
-    musicPlayer.style.display = 'flex';
-}
-
-musicToggle.addEventListener('click', toggleMusic);
-volumeSlider.addEventListener('input', function() {
-    audio.volume = this.value / 100;
-});
-audio.addEventListener('ended', nextSong);
-
-window.addEventListener('beforeunload', function() {
-    sessionStorage.setItem('musicTime', audio.currentTime);
-    sessionStorage.setItem('currentSong', currentSongIndex);
-    sessionStorage.setItem('isPlaying', isPlaying);
-    sessionStorage.setItem('volume', volumeSlider.value);
-    sessionStorage.setItem('shuffledPlaylist', JSON.stringify(shuffledPlaylist));
-});
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('musicTime', audio.currentTime);
+            sessionStorage.setItem('currentSong', currentSongIndex);
+            sessionStorage.setItem('isPlaying', isPlaying);
+            sessionStorage.setItem('volume', volumeSlider.value);
+            sessionStorage.setItem('shuffledPlaylist', JSON.stringify(shuffledPlaylist));
+        });
     </script>
 
-<!-- Music Player -->
-<div class="music-player" id="musicPlayer" style="display: none;">
-    <button class="music-toggle" id="musicToggle">
-        🎵
-    </button>
-    <div class="music-info">
-        <div id="nowPlaying">Playing: Song</div>
-    </div>
-    <div class="volume-control">
-        <span>🔊</span>
-        <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
-    </div>
-</div>
-
-<!-- Audio Element -->
-<audio id="bgMusic" preload="auto"></audio>
 
 </body>
 </html>
